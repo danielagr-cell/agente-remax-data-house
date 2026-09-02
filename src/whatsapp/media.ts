@@ -55,10 +55,31 @@ async function descargar(sock: any, m: any): Promise<Buffer> {
  * Transcripción de audios. Stub listo para enchufar Groq/OpenAI Whisper.
  * Con TRANSCRIPCION_PROVIDER=none devuelve '' y el bot responde igual pidiendo texto.
  */
-async function transcribirAudio(_buffer: Buffer, _mimetype: string): Promise<string> {
-  if (config.transcripcion.provider === 'none' || !config.transcripcion.apiKey) return '';
-  // TODO: implementar. Sugerencia: POST multipart a la API de transcripción
-  //   (OpenAI /v1/audio/transcriptions o Groq whisper-large-v3) con _buffer.
-  logger.warn(`Transcripción no implementada para provider=${config.transcripcion.provider}`);
-  return '';
+async function transcribirAudio(buffer: Buffer, mimetype: string): Promise<string> {
+  const prov = config.transcripcion.provider;
+  const key = config.transcripcion.apiKey;
+  if (prov === 'none' || !key) return '';
+  const base = prov === 'groq' ? 'https://api.groq.com/openai/v1' : 'https://api.openai.com/v1';
+  const model = prov === 'groq' ? 'whisper-large-v3' : 'whisper-1';
+  const ext = mimetype.includes('mp4') || mimetype.includes('m4a') ? 'm4a' : mimetype.includes('mpeg') ? 'mp3' : 'ogg';
+  try {
+    const form = new FormData();
+    form.append('file', new Blob([buffer], { type: mimetype }), `audio.${ext}`);
+    form.append('model', model);
+    form.append('language', 'es');
+    const r = await fetch(`${base}/audio/transcriptions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}` },
+      body: form,
+    });
+    if (!r.ok) {
+      logger.error(`Transcripción ${prov} HTTP ${r.status}: ${await r.text().catch(() => '')}`);
+      return '';
+    }
+    const data = (await r.json()) as { text?: string };
+    return (data.text ?? '').trim();
+  } catch (e) {
+    logger.error(`Transcripción (${prov}): ${(e as Error).message}`);
+    return '';
+  }
 }

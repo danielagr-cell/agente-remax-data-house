@@ -1,6 +1,7 @@
 import type { Agente } from '../types';
 import { config } from '../config';
 import { crearBaileysTransport } from './baileys';
+import { crearCloudTransport } from './cloud';
 
 // Formato interno único: todo mensaje entrante se normaliza a esto (lección del CRM).
 export interface MensajeEntrante {
@@ -28,15 +29,14 @@ export interface Transport {
 }
 
 export function crearTransport(agente: Agente): Transport {
-  switch (config.whatsappTransport) {
+  // Eleccion POR AGENTE: cada numero puede ser Baileys o Cloud. Si el agente no lo define, usa la config global.
+  const modo = agente.transporte ?? config.whatsappTransport ?? 'baileys';
+  switch (modo) {
     case 'baileys':
       return crearBaileysTransport(agente);
     case 'cloud':
-      throw new Error(
-        'Transporte Cloud API pendiente (Fase 2): implementá transport/cloud.ts con esta misma interfaz. ' +
-          'Ahí vive la ventana de 24 h y las plantillas aprobadas.',
-      );
+      return crearCloudTransport(agente);
     default:
-      throw new Error(`Transporte desconocido: ${config.whatsappTransport}`);
+      throw new Error(`Transporte desconocido: ${modo}`);
   }
 }

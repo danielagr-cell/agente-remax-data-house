@@ -13,6 +13,7 @@ export interface Agente {
   horario_atencion: string;
   tono?: string | null;
   business_info: Record<string, unknown>;
+  transporte?: 'baileys' | 'cloud' | null; // por agente; si falta, usa WHATSAPP_TRANSPORT global
   activo: boolean;
 }
 

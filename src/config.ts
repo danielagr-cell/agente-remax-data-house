@@ -59,6 +59,13 @@ export const config = {
     apiKey: process.env.TRANSCRIPCION_API_KEY ?? '',
   },
   whatsappTransport: (process.env.WHATSAPP_TRANSPORT ?? 'baileys') as 'baileys' | 'cloud',
+  // Credenciales por defecto de la Cloud API (para un solo numero; multi-tenant va en business_info.cloud del agente)
+  whatsappCloud: {
+    graphVersion: process.env.WHATSAPP_GRAPH_VERSION ?? 'v20.0',
+    phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
+    token: process.env.WHATSAPP_CLOUD_TOKEN ?? '',
+    verifyToken: process.env.WHATSAPP_VERIFY_TOKEN ?? '',
+  },
   // Sync del catálogo desde el CRM de RE/MAX vía cliente HTTP directo de su API.
   remax: {
     apiUrl: process.env.REMAX_API_URL ?? 'https://api-ar.redremax.com',

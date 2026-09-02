@@ -42,8 +42,9 @@ export function varsDesde(
   opts: { fechaHora: string; origen?: string | null },
 ): Record<string, string> {
   return {
-    AGENTE_NOMBRE: agente.nombre === 'Daniela' ? 'Juan' : agente.nombre,
+    AGENTE_NOMBRE: agente.nombre,
     OFICINA: agente.oficina || 'RE/MAX Data House',
+    GENERO: (String((agente as any).genero || '').toLowerCase() || (/a$/i.test(String(agente.nombre || '').trim()) ? 'femenino' : 'masculino')),
     AGENTE_MATRICULA: agente.matricula ?? 's/d',
     AGENTE_CODIGO_REFERIDO: agente.codigo_referido,
     ZONAS_COBERTURA: agente.zonas_cobertura.join(', ') || 'varias zonas',
@@ -110,3 +111,5 @@ export function componerSystemPrompt(template: string, agente: Agente, lead: Lea
 // reload prompt (reclutamiento)
 
 // reload (metodologia de ventas Daniela)
+
+// reload (identidad por tenant)
