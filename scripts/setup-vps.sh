@@ -11,7 +11,7 @@ if [ ! -f /swapfile ]; then
 fi
 echo "=== [3/7] Instalando Node.js 20 LTS ==="
 if ! command -v node >/dev/null 2>&1; then
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
   sudo apt-get install -y nodejs
 fi
 echo "node: $(node -v)"
