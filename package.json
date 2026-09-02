@@ -1,0 +1,39 @@
+{
+  "name": "remax-datahouse-bot",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Agente IA inmobiliario para WhatsApp (RE/MAX Data House) — Baileys + Vercel AI SDK (Claude) + Supabase. MVP multi-tenant, con sync del catálogo por API directa del CRM.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "test": "tsx src/test/dryRun.ts",
+    "typecheck": "tsc --noEmit",
+    "sync:catalogo": "tsx src/sync/run.ts",
+    "sync:preview": "tsx src/sync/preview.ts",
+    "review": "tsx src/review/run.ts",
+    "review:promote": "tsx src/review/promote.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.41",
+    "@ai-sdk/google": "^4.0.58",
+    "@ai-sdk/openai": "^4.0.46",
+    "@hapi/boom": "^10.0.1",
+    "@supabase/supabase-js": "^2.45.4",
+    "@whiskeysockets/baileys": "^6.7.9",
+    "ai": "^7.0.77",
+    "dotenv": "^16.4.5",
+    "pino": "^9.5.0",
+    "qrcode-terminal": "^0.12.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/qrcode-terminal": "^0.12.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
