@@ -3,6 +3,7 @@ import { enviarBurbujas } from '../whatsapp/sender';
 import { procesarMensaje } from '../whatsapp/media';
 import { config } from '../config';
 import { logger } from '../logger';
+import { recordarMsg } from '../whatsapp/msgStore';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import type { Agente } from '../types';
 import type { Transport, MensajeEntrante } from './index';
@@ -180,6 +181,7 @@ export function crearBaileysTransport(agente: Agente): Transport {
     async enviarA(numeroE164: string, texto: string) {
       const res = await sock.sendMessage(`${soloDigitos(numeroE164)}@s.whatsapp.net`, { text: texto });
       recordar(res?.key?.id);
+      recordarMsg(res?.key?.id, res?.message); // anti "Esperando el mensaje" en las alertas
     },
 
     dentroDeVentana() {

@@ -1,6 +1,8 @@
 // Divide la respuesta del modelo en burbujas y las envía con "escribiendo…" y
 // un pequeño delay para que se sienta una conversación humana.
 
+import { recordarMsg } from './msgStore';
+
 export function splitMessage(texto: string, token: string): string[] {
   return texto
     .split(token)
@@ -29,6 +31,7 @@ export async function enviarBurbujas(sock: any, jid: string, texto: string, opts
     await sleep(delay);
     const res = await sock.sendMessage(jid, { text: b });
     const id: string | undefined = res?.key?.id;
+    recordarMsg(id, res?.message); // guardá el enviado por si el receptor pide reenvio (anti "Esperando el mensaje")
     if (id) opts.onSent?.(id);
   }
   try {

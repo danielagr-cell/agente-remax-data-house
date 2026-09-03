@@ -5,6 +5,7 @@ import pino from 'pino';
 import { join } from 'node:path';
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { logger } from '../logger';
+import { recordarMsg, obtenerMsg } from './msgStore';
 import type { Agente } from '../types';
 
 export type MensajeHandler = (sock: any, m: any) => Promise<void>;
@@ -26,6 +27,10 @@ export async function iniciarAgente(agente: Agente, handlers: Handlers): Promise
   const sock = makeWASocket({
     auth: state,
     logger: pino({ level: 'silent' }),
+    // Clave para el cartel "Esperando el mensaje": si el receptor no pudo
+    // desencriptar, pide un reenvio (retry) y Baileys necesita recuperar el
+    // contenido original para re-cifrarlo. Sin esto queda colgado para siempre.
+    getMessage: async (key: any) => obtenerMsg(key?.id),
   });
 
   sock.ev.on('creds.update', saveCreds);
@@ -88,6 +93,7 @@ export async function iniciarAgente(agente: Agente, handlers: Handlers): Promise
     if (type !== 'notify') return;
     for (const m of messages) {
       if (!m.message) continue;
+      recordarMsg(m.key?.id, m.message); // para poder reenviar ante un retry (anti "Esperando el mensaje")
       try { writeFileSync(`rx-${_safe}.txt`, `  msg fromMe=${m.key?.fromMe} jid=${m.key?.remoteJid} alt=${m.key?.remoteJidAlt ?? ''} text=${JSON.stringify(m.message?.conversation ?? m.message?.extendedTextMessage?.text ?? Object.keys(m.message ?? {}))}\n`, { flag: 'a' }); } catch { /* */ }
       try {
         if (m.key?.fromMe) await handlers.onEcoHumano(sock, m);
