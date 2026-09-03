@@ -15,6 +15,8 @@ export interface Handlers {
 }
 
 const _codePedido = new Set<string>(); // pide el codigo de vinculacion una vez por socket
+const _reintento = new Map<string, number>(); // backoff: numero de intento por agente
+const _reconectando = new Set<string>(); // evita reconexiones solapadas (anti-tormenta de sockets)
 
 export async function iniciarAgente(agente: Agente, handlers: Handlers): Promise<any> {
   const authDir = join('auth', agente.id);
@@ -54,12 +56,29 @@ export async function iniciarAgente(agente: Agente, handlers: Handlers): Promise
       const reconectar = status !== DisconnectReason.loggedOut;
       try { writeFileSync(`conn-${_safe}.txt`, `status=${status} reconectar=${reconectar} @` + new Date().toISOString(), 'utf8'); } catch { /* */ }
       logger.warn(`Conexion cerrada (${agente.nombre}). status=${status}. reconectar=${reconectar}`);
+      // El socket ya esta muerto: le sacamos los listeners para que no dispare
+      // 'close' de nuevo y agende reconexiones fantasma (causa de la tormenta 428).
+      try { sock.ev.removeAllListeners('connection.update'); } catch { /* */ }
       if (reconectar) {
-        setTimeout(() => { iniciarAgente(agente, handlers).catch((e) => logger.error(e)); }, 8000);
+        // Un solo reintento en vuelo por agente + backoff creciente: evita el loop
+        // de reconexiones que WhatsApp corta con 428/503.
+        if (!_reconectando.has(agente.id)) {
+          _reconectando.add(agente.id);
+          const intento = (_reintento.get(agente.id) ?? 0) + 1;
+          _reintento.set(agente.id, intento);
+          const espera = Math.min(60000, 5000 * 2 ** (intento - 1)); // 5s, 10s, 20s, 40s, 60s...
+          logger.warn(`Reconexion ${agente.nombre}: intento ${intento} en ${Math.round(espera / 1000)}s.`);
+          setTimeout(() => {
+            _reconectando.delete(agente.id);
+            iniciarAgente(agente, handlers).catch((e) => logger.error(e));
+          }, espera);
+        }
       } else {
         logger.error(`Sesion cerrada para ${agente.nombre}. Borra auth/${agente.id}/ y reinicia para re-vincular.`);
       }
     } else if (connection === 'open') {
+      _reintento.set(agente.id, 0); // conexion estable: resetea el backoff
+      _reconectando.delete(agente.id);
       logger.info(`${agente.nombre} conectada a WhatsApp.`);
     }
   });
