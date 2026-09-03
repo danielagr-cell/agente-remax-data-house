@@ -98,10 +98,6 @@ function telefonoDeMensaje(m: any): string {
  * opción, para no quedarnos mudos ante un lead que todavía no mapeamos).
  */
 function destinoParaEnviar(jid: string): string {
-  if (esLid(jid)) {
-    const pn = lidAPn.get(soloDigitos(jid));
-    if (pn) return `${pn}@s.whatsapp.net`;
-  }
   return jid;
 }
 
